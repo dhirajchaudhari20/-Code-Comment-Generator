@@ -2,6 +2,11 @@ import time
 import streamlit as st
 import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
+import toml
+
+# Load the secrets
+config = toml.load('secrets.toml')
+google_api_key = config['general']['GOOGLE_API_KEY']
 
 @st.cache_resource
 def load_models():
