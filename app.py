@@ -2,11 +2,6 @@ import time
 import streamlit as st
 import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
-import toml
-
-# Load the secrets
-config = toml.load('secrets.toml')
-google_api_key = config['general']['GOOGLE_API_KEY']
 
 @st.cache_resource
 def load_models():
@@ -14,7 +9,6 @@ def load_models():
     Load the generative models for text and multimodal generation.
     """
     try:
-        # Test if secrets can be accessed
         google_api_key = st.secrets["general"]["GOOGLE_API_KEY"]
         if not google_api_key:
             st.error("API key is empty. Please check your secrets.toml file.")
@@ -46,13 +40,12 @@ def generate_prompt(code):
 
     You should not generate any new code yourself, but rather understand and comment on the provided code snippet.
 
-    Elevate documentation practices, promote collaboration, and enhance developer experience.
     Here is the code snippet for which code comments need to be generated: \n\n{code}
     """
 
 def get_gemini_response(code, config):
     """
-    This function serves as an interface to the Gemini generative AI model.
+    Interface to the Gemini generative AI model.
     """
     prompt = generate_prompt(code)
 
@@ -70,6 +63,30 @@ def get_gemini_response(code, config):
             return response.text
         else:
             return "Model not loaded properly. Check your API key and configuration."
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+        return None
+
+def generate_line_by_line_prompt(code):
+    """
+    Generates a prompt for explaining the code line by line.
+    """
+    return f"""
+    Explain each line of the following code in detail. Provide clear, simple explanations that make it easy to understand for someone new to the language. Here is the code: \n\n{code}
+    """
+
+def get_line_by_line_explanation(code, config):
+    """
+    Generates line-by-line explanations of the code.
+    """
+    prompt = generate_line_by_line_prompt(code)
+    try:
+        model = load_models()
+        if model:
+            response = model.generate_content(prompt, generation_config=config)
+            return response.text
+        else:
+            return "Model not loaded properly."
     except Exception as e:
         st.error(f"An error occurred: {e}")
         return None
@@ -121,12 +138,10 @@ def initialize_streamlit():
 
     warning_message = (
         "The generated output may not always meet your expectations. "
-        "If you find that the result is not up to the mark or doesn't meet your requirements, "
+        "If you find that the result is not up to the mark, "
         "please consider hitting the generate button again for an improved outcome.\n\n"
-        "Use the generated code at your own discretion, and feel free to refine the input or adjust any parameters "
-        "to achieve the desired comments for your code."
+        "Use the generated code at your own discretion."
     )
-    
     st.warning(warning_message, icon="⚠️")
 
     with st.expander("How to use"):
@@ -134,10 +149,7 @@ def initialize_streamlit():
             "Please input a code snippet in the text area below. "
             "The Code Comment Generator will analyze the input and generate comments for your code."
         )
-        st.write(
-            "For the best results, provide a clear and concise code snippet along with any specific comment type "
-            "or language preferences."
-        )
+        st.write("You can now also get a line-by-line explanation by clicking the new button!")
 
 def user_input():
     """
@@ -182,11 +194,16 @@ def main():
     user_input_text = user_input()
     config = generative_config()
     
-    submit_button = st.button("Generate Code Comments")
+    col1, col2 = st.columns(2)
+    with col1:
+        generate_comments = st.button("Generate Code Comments")
+    with col2:
+        explain_code = st.button("Explain Line by Line")
+    
     response_placeholder = st.empty()
 
-    if submit_button:
-        progress_text = "Generating Code Comments from Gemini Pro 1.0.0 Model..."
+    if generate_comments:
+        progress_text = "Generating Code Comments..."
         my_bar = st.progress(0, text=progress_text)
         response = None
         for percent_complete in range(100):
@@ -198,7 +215,23 @@ def main():
         if response is not None:
             response_placeholder.subheader("The Response is")
             response_placeholder.write(response)
+
+    if explain_code:
+        progress_text = "Generating Line-by-Line Explanation..."
+        my_bar = st.progress(0, text=progress_text)
+        response = None
+        for percent_complete in range(100):
+            time.sleep(0.03)
+            my_bar.progress(percent_complete + 1, text=progress_text)
+            if percent_complete == 98:
+                response = get_line_by_line_explanation(user_input_text, config)
+        my_bar.empty()
+        if response is not None:
+            response_placeholder.subheader("Line-by-Line Explanation")
+            response_placeholder.write(response)
+
     custom_footer()
 
 if __name__ == "__main__":
     main()
+    
