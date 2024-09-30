@@ -67,30 +67,6 @@ def get_gemini_response(code, config):
         st.error(f"An error occurred: {e}")
         return None
 
-def generate_line_by_line_prompt(code):
-    """
-    Generates a prompt for explaining the code line by line.
-    """
-    return f"""
-    Explain each line of the following code in detail. Provide clear, simple explanations that make it easy to understand for someone new to the language. Here is the code: \n\n{code}
-    """
-
-def get_line_by_line_explanation(code, config):
-    """
-    Generates line-by-line explanations of the code.
-    """
-    prompt = generate_line_by_line_prompt(code)
-    try:
-        model = load_models()
-        if model:
-            response = model.generate_content(prompt, generation_config=config)
-            return response.text
-        else:
-            return "Model not loaded properly."
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
-        return None
-
 def initialize_streamlit():
     """
     Initializes the Streamlit application.
@@ -99,57 +75,98 @@ def initialize_streamlit():
     st.markdown(
         """
         <style>
+        /* Sexy Gradient Background */
         body {
-            background-color: #121212;
+            background: linear-gradient(135deg, #0F2027, #203A43, #2C5364);
             color: #E0E0E0;
+            font-family: 'Poppins', sans-serif;
         }
-        .css-18e3th9 {
-            background-color: #1E1E1E;
+
+        /* Smooth Scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
         }
-        .css-1v3fvcr, .css-1aumxhk, .css-1v1g5kx {
-            color: #E0E0E0;
+        ::-webkit-scrollbar-track {
+            background: #1E1E1E;
         }
-        .stTextInput>div>div>input {
-            background-color: #2C2C2C;
-            color: #E0E0E0;
+        ::-webkit-scrollbar-thumb {
+            background-color: #FF6B6B;
+            border-radius: 10px;
+            border: 3px solid #1E1E1E;
         }
+
+        /* Button Styles */
         .stButton>button {
-            background-color: #6200EE;
-            color: #FFFFFF;
+            background: linear-gradient(135deg, #12C2E9, #C471ED, #F64F59);
+            color: white;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
         }
         .stButton>button:hover {
-            background-color: #3700B3;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
         }
-        .stProgress>div {
-            background-color: #6200EE;
+
+        /* Stylish Text Inputs */
+        .stTextInput>div>div>input {
+            background-color: #2C2C2C;
+            color: white;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: box-shadow 0.3s ease;
         }
+        .stTextInput>div>div>input:focus {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Progress Bar */
         .stProgress>div>div {
-            background-color: #3700B3;
+            background: linear-gradient(135deg, #12C2E9, #C471ED, #F64F59);
+            height: 10px;
+            border-radius: 5px;
         }
-        .stAlert {
-            background-color: #FFAB00;
-            color: #000000;
+
+        /* Title and Typography */
+        .title-text {
+            font-size: 3rem;
+            color: #FF6B6B;
+            text-align: center;
+            padding: 20px 0;
+            text-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Expander for Instructions */
+        .stExpander {
+            background-color: rgba(255, 107, 107, 0.1);
+            border-left: 3px solid #FF6B6B;
+            border-radius: 10px;
+            padding: 10px;
         }
         </style>
         """,
         unsafe_allow_html=True
     )
-    st.markdown("<div style='text-align: center;'><h1>Code Comment Generator 💻🤓</h1></div>", unsafe_allow_html=True)
+    st.markdown("<h1 class='title-text'>Code Comment Generator 💻✨</h1>", unsafe_allow_html=True)
 
-    warning_message = (
-        "The generated output may not always meet your expectations. "
-        "If you find that the result is not up to the mark, "
-        "please consider hitting the generate button again for an improved outcome.\n\n"
-        "Use the generated code at your own discretion."
+    st.warning(
+        "The generated output may not always meet your expectations. If you find that the result is not up to the mark, "
+        "try hitting the generate button again for improved outcomes.\n\nUse the generated code at your own discretion.",
+        icon="⚠️"
     )
-    st.warning(warning_message, icon="⚠️")
 
     with st.expander("How to use"):
         st.write(
-            "Please input a code snippet in the text area below. "
-            "The Code Comment Generator will analyze the input and generate comments for your code."
+            "Input a code snippet in the text area below. The Code Comment Generator will analyze it and provide code comments.\n"
+            "You can also get a line-by-line explanation by clicking the new button!"
         )
-        st.write("You can now also get a line-by-line explanation by clicking the new button!")
 
 def user_input():
     """
@@ -162,7 +179,7 @@ def generative_config():
     Returns the configuration settings for the generative model.
     """
     creative_control = st.radio(
-        "Select the creativity level: \n\n",
+        "Select the creativity level: ",
         ["Low", "High"],
         key="creative_control",
         horizontal=True,
@@ -178,10 +195,10 @@ def custom_footer():
     Adds a custom footer to the application.
     """
     footer = '''
-    <div style="text-align: center; margin-top: 20px; padding: 10px;">
+    <div style="text-align: center; margin-top: 20px; padding: 10px; color: #FF6B6B;">
         Made with ❤️ by <b>Dhiraj Chaudhari</b>
         <br>
-        <a href="https://www.linkedin.com/in/dhiraj-chaudhari/" style="color: #6200EE;">Connect on LinkedIn</a>
+        <a href="https://www.linkedin.com/in/dhiraj-chaudhari/" style="color: #12C2E9;">Connect on LinkedIn</a>
     </div>
     '''
     st.markdown(footer, unsafe_allow_html=True)
@@ -224,14 +241,13 @@ def main():
             time.sleep(0.03)
             my_bar.progress(percent_complete + 1, text=progress_text)
             if percent_complete == 98:
-                response = get_line_by_line_explanation(user_input_text, config)
+                response = get_gemini_response(user_input_text, config)
         my_bar.empty()
         if response is not None:
-            response_placeholder.subheader("Line-by-Line Explanation")
+            response_placeholder.subheader("The Line-by-Line Explanation is")
             response_placeholder.write(response)
 
     custom_footer()
 
 if __name__ == "__main__":
     main()
-    
