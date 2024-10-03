@@ -1,2 +1,4 @@
 streamlit
 google-generativeai
+guesslang
+tensorflow==2.5.0
