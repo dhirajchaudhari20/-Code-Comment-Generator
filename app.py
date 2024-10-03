@@ -198,7 +198,7 @@ def custom_footer():
     <div style="text-align: center; margin-top: 20px; padding: 10px; color: #FF6B6B;">
         Made with ❤️ by <b>Dhiraj Chaudhari</b>
         <br>
-        <a href="https://www.linkedin.com/in/dhiraj-chaudhari/" style="color: #12C2E9;">Connect on LinkedIn</a>
+        <a href="https://www.linkedin.com/in/dhiraj-chaudhari-06ba10259/" style="color: #12C2E9;">Connect on LinkedIn</a>
     </div>
     '''
     st.markdown(footer, unsafe_allow_html=True)
